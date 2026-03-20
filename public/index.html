@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aphilia Upload</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f0f12;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .box {
+      width: 420px;
+      max-width: 90%;
+      background: #17171c;
+      border: 1px solid #2a2a34;
+      border-radius: 16px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: 24px;
+    }
+
+    .dropzone {
+      border: 2px dashed #555;
+      border-radius: 12px;
+      padding: 35px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      background: #111;
+    }
+
+    .dropzone.dragover {
+      border-color: #8b5cf6;
+      background: #181124;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #333;
+      background: #0d0d10;
+      color: white;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px;
+      border: 0;
+      border-radius: 10px;
+      background: #8b5cf6;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .small {
+      color: #aaa;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .result {
+      margin-top: 16px;
+      word-break: break-all;
+    }
+
+    a {
+      color: #9f7aea;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Aphilia Upload</h1>
+
+    <div class="dropzone" id="dropzone">
+      Drag & drop a video here<br><br>
+      or click to choose a file
+    </div>
+
+    <input type="file" id="fileInput" accept="video/mp4,video/webm,video/quicktime,video/x-matroska" hidden />
+    <input type="password" id="uploadKey" placeholder="Upload key" />
+
+    <button id="uploadBtn">Upload</button>
+
+    <div class="small">Accepted: mp4, webm, mov, mkv</div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const uploadKeyInput = document.getElementById("uploadKey");
+    const result = document.getElementById("result");
+
+    let selectedFile = null;
+
+    dropzone.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length > 0) {
+        selectedFile = fileInput.files[0];
+        dropzone.innerHTML = `Selected: <b>${selectedFile.name}</b>`;
+      }
+    });
+
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("dragover");
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+
+      if (e.dataTransfer.files.length > 0) {
+        selectedFile = e.dataTransfer.files[0];
+        dropzone.innerHTML = `Selected: <b>${selectedFile.name}</b>`;
+      }
+    });
+
+    uploadBtn.addEventListener("click", async () => {
+      const uploadKey = uploadKeyInput.value.trim();
+
+      if (!selectedFile) {
+        result.innerHTML = "Pick a file first.";
+        return;
+      }
+
+      if (!uploadKey) {
+        result.innerHTML = "Enter your upload key.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      result.innerHTML = "Uploading...";
+
+      try {
+        const res = await fetch("/upload", {
+          method: "POST",
+          headers: {
+            "x-upload-key": uploadKey
+          },
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          result.innerHTML = `Error: ${data.error || "Upload failed."}`;
+          return;
+        }
+
+        result.innerHTML = `
+          Upload complete.<br><br>
+          <a href="${data.url}" target="_blank">${data.url}</a>
+        `;
+      } catch (err) {
+        result.innerHTML = `Error: ${err.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
