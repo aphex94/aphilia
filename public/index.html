@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aphilia Upload</title>
+
+  <style>
+    body {
+      font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+      background: #0f0f12;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      gap: 24px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .socials {
+      width: 190px;
+      background: #17171c;
+      border: 1px solid #2a2a34;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .socials h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      font-weight: normal;
+    }
+
+    .social-item,
+    .social-copy {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #111;
+      border: 1px solid #2f2f38;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      color: white;
+      text-decoration: none;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s ease, opacity 0.25s ease;
+    }
+
+    .social-item:hover,
+    .social-copy:hover {
+      background: #18181f;
+    }
+
+    .social-icon {
+      width: 30px;
+      height: 30px;
+      fill: white;
+      flex-shrink: 0;
+    }
+
+    .fade-text {
+      transition: opacity 0.35s ease;
+      opacity: 1;
+    }
+
+    .fade-out {
+      opacity: 0;
+    }
+
+    .box {
+      width: 420px;
+      background: #17171c;
+      border: 1px solid #2a2a34;
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-weight: normal;
+    }
+
+    .dropzone {
+      border: 2px dashed #555;
+      border-radius: 12px;
+      padding: 35px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: #111;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .dropzone.dragover {
+      border-color: #8b5cf6;
+      background: #181124;
+    }
+
+    input {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #333;
+      background: #0d0d10;
+      color: white;
+      box-sizing: border-box;
+      font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: #8b5cf6;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s ease, opacity 0.35s ease;
+      font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    }
+
+    .copy-btn {
+      background: #444;
+    }
+
+    .result {
+      margin-top: 14px;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="socials">
+    <h2>Links</h2>
+
+    <a class="social-item" href="https://x.com/aphex94" target="_blank">
+      <svg class="social-icon" viewBox="0 0 1200 1227">
+        <path d="M714.163 519.284 1160.89 0H1055.4L667.137 451.887 357.328 0H0l468.492 682.327L0 1226.37h105.495l409.37-476.152 326.807 476.152H1200L714.137 519.284Z"/>
+      </svg>
+      <span>@aphex94</span>
+    </a>
+
+    <div class="social-copy" onclick="copyDiscord()">
+      <svg class="social-icon" viewBox="0 0 24 24">
+        <path d="M20.317 4.369a19.791 19.791 0 0 0-4.885-1.515c-.211.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0c-.164-.385-.397-.874-.608-1.249a19.736 19.736 0 0 0-4.885 1.515C.533 9.046-.32 13.58.099 18.057a19.9 19.9 0 0 0 5.993 3.03c.462-.63.874-1.295 1.226-1.994a13.107 13.107 0 0 1-1.872-.892c3.927 1.793 8.18 1.793 12.061 0a12.299 12.299 0 0 1-1.873.891c.36.698.772 1.363 1.225 1.993a19.839 19.839 0 0 0 6.002-3.03c.5-5.177-.838-9.674-3.549-13.66Z"/>
+      </svg>
+      <span id="discordText" class="fade-text">@aphex94</span>
+    </div>
+  </div>
+
+  <div class="box">
+    <h1>Aphilia Upload</h1>
+
+    <div class="dropzone" id="dropzone">
+      Drag & drop a video<br><br>or click to choose
+    </div>
+
+    <input type="file" id="fileInput" hidden />
+    <input type="text" id="videoName" placeholder="Enter video name" />
+    <input type="password" id="uploadKey" placeholder="Upload key" />
+
+    <button id="uploadBtn">Upload</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    let selectedFile = null;
+    let lastUploaded = "";
+
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    const result = document.getElementById("result");
+
+    dropzone.onclick = () => fileInput.click();
+
+    fileInput.onchange = () => {
+      selectedFile = fileInput.files[0];
+      dropzone.innerHTML = selectedFile.name;
+    };
+
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      selectedFile = e.dataTransfer.files[0];
+      dropzone.innerHTML = selectedFile.name;
+      dropzone.classList.remove("dragover");
+    };
+
+    dropzone.ondragover = (e) => {
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    };
+
+    dropzone.ondragleave = () => {
+      dropzone.classList.remove("dragover");
+    };
+
+    function fadeSwapText(element, tempText, originalText, delay = 1200) {
+      element.textContent = tempText;
+      element.classList.remove("fade-out");
+
+      setTimeout(() => {
+        element.classList.add("fade-out");
+
+        setTimeout(() => {
+          element.textContent = originalText;
+          element.classList.remove("fade-out");
+        }, 350);
+      }, delay);
+    }
+
+    function copyDiscord() {
+      const textEl = document.getElementById("discordText");
+      navigator.clipboard.writeText("@aphex94");
+      fadeSwapText(textEl, "Copied!", "@aphex94");
+    }
+
+    function copyText() {
+      navigator.clipboard.writeText(lastUploaded);
+      const btn = document.getElementById("copyBtn");
+      btn.textContent = "Copied!";
+      btn.classList.remove("fade-out");
+
+      setTimeout(() => {
+        btn.classList.add("fade-out");
+
+        setTimeout(() => {
+          btn.textContent = "Copy";
+          btn.classList.remove("fade-out");
+        }, 350);
+      }, 1200);
+    }
+
+    document.getElementById("uploadBtn").onclick = async () => {
+      const key = document.getElementById("uploadKey").value.trim();
+      const name = document.getElementById("videoName").value.trim();
+
+      if (!selectedFile) {
+        result.innerHTML = "Select a file.";
+        return;
+      }
+
+      if (!key) {
+        result.innerHTML = "Enter upload key.";
+        return;
+      }
+
+      if (!name) {
+        result.innerHTML = "Enter video name.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      result.innerHTML = "Uploading...";
+
+      const res = await fetch("/upload", {
+        method: "POST",
+        headers: { "x-upload-key": key },
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        result.innerHTML = "Error uploading.";
+        return;
+      }
+
+      lastUploaded = `[${name}](${data.url})`;
+
+      result.innerHTML = `
+        Done.<br><br>
+        <button class="copy-btn" id="copyBtn" onclick="copyText()">Copy</button>
+      `;
+    };
+  </script>
+</body>
+</html>
